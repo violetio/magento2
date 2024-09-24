@@ -2,6 +2,7 @@
     "name": "violetio/magento2",
     "description": "Magento 2 module for connecting your store to Violet.",
     "require": {},
+    "minimum-stability": "stable",
     "keywords": [
         "omnichannel",
         "distribution"
