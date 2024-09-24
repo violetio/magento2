@@ -1,0 +1,18 @@
+{
+    "violetconnect": {
+        "column": {
+            "id": true,
+            "api_user_created": true,
+            "configuration_state": true,
+            "token": true,
+            "merchant_id": true,
+            "last_catalog_sync_date": true,
+            "product_update_webhooks_enabled": true,
+            "product_delete_webhooks_enabled": true,
+            "order_webhooks_enabled": true
+        },
+        "constraint": {
+            "PRIMARY": true
+        }
+    }
+}

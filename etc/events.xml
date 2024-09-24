@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="catalog_product_save_after">
+        <observer name="product_update" instance="Violet\VioletConnect\Observer\ProductSaveAfter" />
+    </event>
+    <event name="cataloginventory_stock_item_save_commit_after">
+        <observer name="stock_item_save_after" instance="Violet\VioletConnect\Observer\StockItemSaveAfter" />
+    </event>
+    <event name="order_cancel_after">
+        <observer name="sales_order_cancel" instance="Violet\VioletConnect\Observer\SalesOrderCanceled" />
+    </event>
+    <event name="sales_order_creditmemo_save_after">
+        <observer name="sales_order_credit_after" instance="Violet\VioletConnect\Observer\SalesOrderCreditAfter" />
+    </event>
+    <event name="checkout_submit_all_after">
+        <observer name="sales_order_placed" instance="Violet\VioletConnect\Observer\SalesOrderPlaced" />
+    </event>
+    <event name="sales_order_creditmemo_refund">
+        <observer name="sales_order_refunded" instance="Violet\VioletConnect\Observer\SalesOrderRefunded" />
+    </event>
+    <event name="catalog_product_delete_after">
+        <observer name="product_deletion" instance="Violet\VioletConnect\Observer\ProductDeleteAfter" />
+    </event>
+    <event name="sales_order_place_before">
+        <observer name="before_sales_order_placed" instance="Violet\VioletConnect\Observer\BeforeSalesOrderPlaced" />
+    </event>
+</config>
