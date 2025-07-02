@@ -8,17 +8,19 @@ interface VioletRepositoryInterface
 {
     /**
      *
+     * @param int $dateUpdatedFrom
      * @return int
      */
-    public function skuCount();
+    public function skuCount($dateUpdatedFrom);
 
     /**
      * 
      * @param int $page
      * @param int $pageSize
+     * @param int $dateUpdatedFrom
      * @return Magento\Catalog\Api\Data\ProductInterface[]
      */
-    public function skus($page, $pageSize);
+    public function skus($page, $pageSize, $dateUpdatedFrom);
 
     /**
      * 

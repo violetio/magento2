@@ -4,6 +4,7 @@ namespace Violet\VioletConnect\Model\ResourceModel;
 use Violet\VioletConnect\Api\VioletGuestShippingInformationRepositoryInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
+use Magento\Framework\Exception\InputException;
 
 
 /**

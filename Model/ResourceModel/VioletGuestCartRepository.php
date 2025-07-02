@@ -3,6 +3,7 @@ namespace Violet\VioletConnect\Model\ResourceModel;
 
 use Violet\VioletConnect\Api\VioletGuestCartRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
+use Magento\Framework\Exception\InputException;
 
 /**
  * Violet VioletGuestCartRepository
@@ -87,7 +88,7 @@ class VioletGuestCartRepository implements VioletGuestCartRepositoryInterface
         $quote = $this->quoteRepository->get($quoteIdMask->getQuoteId());
 
         // delete the quote
-        $quote->delete($quote);
+        $this->quoteRepository->delete($quote);
 
         return $cartId;
     }

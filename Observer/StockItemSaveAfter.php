@@ -32,7 +32,7 @@ class StockItemSaveAfter implements ObserverInterface
             $objectManager = \Magento\Framework\App\ObjectManager::getInstance();
             $item = $observer->getEvent()->getItem();
             if ($item !== null && $item->getTypeId() != "configurable") {
-                $product = $this->productRepository->getById($item->getitemId());
+                $product = $this->productRepository->getById($item->getItemId());
                 if ($product !== null) {
                     $this->vClient->productUpdated($product->getSku());
                 }
