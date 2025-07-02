@@ -7,9 +7,9 @@
             "token": true,
             "merchant_id": true,
             "last_catalog_sync_date": true,
-            "product_update_webhooks_enabled": true,
-            "product_delete_webhooks_enabled": true,
-            "order_webhooks_enabled": true
+            "product_update_webhooks_enabled": false,
+            "product_delete_webhooks_enabled": false,
+            "order_webhooks_enabled": false
         },
         "constraint": {
             "PRIMARY": true

@@ -194,7 +194,6 @@ class Client extends AbstractHelper
 
             // prepare request (remove debug upon completion)
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-            curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_HEADER, 1);
 
@@ -253,8 +252,10 @@ class Client extends AbstractHelper
             if ($i === 0) {
                 $headers['http_code'] = $line;
             } else {
-                        list ($key, $value) = explode(': ', $line);
-                        $headers[$key] = $value;
+                        $parts = explode(': ', $line, 2);
+                        if (count($parts) === 2) {
+                            $headers[$parts[0]] = $parts[1];
+                        }
             }
         }
         return $headers;

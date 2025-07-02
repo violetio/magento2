@@ -78,16 +78,23 @@ class VioletRepository implements VioletRepositoryInterface
      * counts visible skus
      *
      * @api
+     * 
+     * @param string $dateUpdatedFrom
      *
      * @return int
      */
-    public function skuCount()
+    public function skuCount($dateUpdatedFrom = null)
     {
         $pCol = $this->productCollectionFactory->create();
         $pCol->joinAttribute('status', 'catalog_product/status', 'entity_id', null, 'inner');
         $pCol->joinAttribute('visibility', 'catalog_product/visibility', 'entity_id', null, 'inner');
         $pCol->addAttributeToFilter('status', ['in' => $this->productStatus->getVisibleStatusIds()])
         ->addAttributeToFilter('visibility', ['in' => $this->productVisibility->getVisibleInSiteIds()]);
+
+        if(!empty($dateUpdatedFrom)) {
+            $fromDate = date('Y-m-d H:i:s', $dateUpdatedFrom);
+            $pCol->addAttributeToFilter('updated_at', ['gteq' => $fromDate]);
+        }
 
         return $pCol->getSize();
     }
@@ -99,16 +106,17 @@ class VioletRepository implements VioletRepositoryInterface
      *
      * @param int $page
      * @param int $pageSize
+     * @param string $dateUpdatedFrom
      *
      * @return Magento\Catalog\Api\Data\ProductInterface[]
      */
-    public function skus($page, $pageSize)
+    public function skus($page, $pageSize, $dateUpdatedFrom = null)
     {
         if ($page === null) {
             $page = 1;
         }
         if ($pageSize === null) {
-            $page = 20;
+            $pageSize = 20;
         }
         if ($pageSize > 50) {
             $pageSize = 50;
@@ -121,6 +129,12 @@ class VioletRepository implements VioletRepositoryInterface
         $pCol->joinAttribute('visibility', 'catalog_product/visibility', 'entity_id', null, 'inner');
         $pCol->addAttributeToFilter('status', ['in' => $this->productStatus->getVisibleStatusIds()])
         ->addAttributeToFilter('visibility', ['in' => $this->productVisibility->getVisibleInSiteIds()]);
+        
+        if(!empty($dateUpdatedFrom)) {
+            $fromDate = date('Y-m-d H:i:s', $dateUpdatedFrom);
+            $pCol->addAttributeToFilter('updated_at', ['gteq' => $fromDate]);
+        }
+        
         $pCol->setPageSize($pageSize)->setCurPage($page)->load();
 
         foreach ($pCol as $p) {
@@ -205,7 +219,7 @@ class VioletRepository implements VioletRepositoryInterface
         try {
             $shipments = $shipmentRepositoryInterface->getList($searchCriteria);
             return $shipments->getItems();
-        } catch (Exception $exception) {
+        } catch (\Exception $exception) {
             $this->logger->critical($exception->getMessage());
             return null;
         }
@@ -235,8 +249,8 @@ class VioletRepository implements VioletRepositoryInterface
     
             return $admin;
 
-        } catch (Exception $exception) {
-            $logger->critical($exception->getMessage());
+        } catch (\Exception $exception) {
+            $this->logger->critical($exception->getMessage());
             return null;
         }
     }
@@ -285,8 +299,8 @@ class VioletRepository implements VioletRepositoryInterface
             $configRes->setOrderWebhooksEnabled($violetEntity->getOrderWebhooksEnabled());
             return $configRes;
 
-        } catch (Exception $exception) {
-            $logger->critical($exception->getMessage());
+        } catch (\Exception $exception) {
+            $this->logger->critical($exception->getMessage());
             return null;
         }
     }
@@ -311,8 +325,8 @@ class VioletRepository implements VioletRepositoryInterface
             $configRes->setOrderWebhooksEnabled($violetEntity->getOrderWebhooksEnabled());
             return $configRes;
 
-        } catch (Exception $exception) {
-            $logger->critical($exception->getMessage());
+        } catch (\Exception $exception) {
+            $this->logger->critical($exception->getMessage());
             return null;
         }
     }

@@ -9,6 +9,7 @@ use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\ProductRepository;
 use Violet\VioletConnect\Model\Data\VioletCalculatedCart;
 use Violet\VioletConnect\Model\Data\VioletShippingMethod;
+use Magento\Framework\Exception\InputException;
 
 /**
  * Violet VioletGuestCartTotalRepository
@@ -198,7 +199,7 @@ class VioletGuestCartTotalRepository implements VioletGuestCartTotalRepositoryIn
         $violetCalculatedCart->setTotals($cartTotals);
 
         // delete the quote
-        $quote->delete($quote);
+        $this->quoteRepository->delete($quote);
 
         return $violetCalculatedCart;
     }

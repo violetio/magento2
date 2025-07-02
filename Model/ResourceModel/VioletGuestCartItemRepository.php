@@ -4,6 +4,7 @@ namespace Violet\VioletConnect\Model\ResourceModel;
 use Violet\VioletConnect\Api\VioletGuestCartItemRepositoryInterface;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
+use Magento\Framework\Exception\InputException;
 
 /**
  * Violet VioletGuestCartItemRepository
@@ -129,7 +130,8 @@ class VioletGuestCartItemRepository implements VioletGuestCartItemRepositoryInte
                 return $item;
             }
         }
-        // fallback - return the first item in the collection
-        return $quote->getAllVisibleItems()[0];
+        // fallback - return the first item in the collection if available
+        $allItems = $quote->getAllVisibleItems();
+        return !empty($allItems) ? $allItems[0] : null;
     }
 }
