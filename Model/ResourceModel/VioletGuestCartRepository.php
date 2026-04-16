@@ -4,6 +4,8 @@ namespace Violet\VioletConnect\Model\ResourceModel;
 use Violet\VioletConnect\Api\VioletGuestCartRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\InputException;
+use Magento\Framework\Registry;
+use Violet\VioletConnect\Model\Violet;
 
 /**
  * Violet VioletGuestCartRepository
@@ -26,21 +28,28 @@ class VioletGuestCartRepository implements VioletGuestCartRepositoryInterface
      * @var QuoteIdMaskFactory
      */
     private $quoteIdMaskFactory;
+    /**
+     * @var Registry
+     */
+    private $registry;
 
 
     /**
      * @param CartRepositoryInterface $quoteRepository
      * @param QuoteIdMaskFactory $quoteIdMaskFactory
      * @param QuoteManagement $quoteManagement
+     * @param Registry $registry
      */
     public function __construct(
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
         \Magento\Quote\Model\QuoteIdMaskFactory $quoteIdMaskFactory,
-        \Magento\Quote\Model\QuoteManagement $quoteManagement
+        \Magento\Quote\Model\QuoteManagement $quoteManagement,
+        \Magento\Framework\Registry $registry
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
         $this->quoteManagement = $quoteManagement;
+        $this->registry = $registry;
     }
 
     /**
@@ -60,13 +69,20 @@ class VioletGuestCartRepository implements VioletGuestCartRepositoryInterface
 
         // load the quote using the unmasked ID
         $quote = $this->quoteRepository->get($quoteIdMask->getQuoteId());
-      
-        // any usage of this endpoint must use the violet payment method
-        $quote->setPaymentMethod('violet'); //payment method
-        $quote->getPayment()->importData(['method' => 'violet']);
-        $quote->save();
-       
-        return $this->quoteManagement->placeOrder($quoteIdMask->getQuoteId(), $paymentMethod);
+
+        // Mark this request as a Violet-originated payment so the Violet payment method's
+        // isAvailable() check passes for importData and placeOrder.
+        $this->registry->register(Violet::VIOLET_API_CONTEXT_FLAG, true, true);
+        try {
+            // any usage of this endpoint must use the violet payment method
+            $quote->setPaymentMethod('violet'); //payment method
+            $quote->getPayment()->importData(['method' => 'violet']);
+            $quote->save();
+
+            return $this->quoteManagement->placeOrder($quoteIdMask->getQuoteId(), $paymentMethod);
+        } finally {
+            $this->registry->unregister(Violet::VIOLET_API_CONTEXT_FLAG);
+        }
     }
 
     /**

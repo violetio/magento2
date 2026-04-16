@@ -7,8 +7,10 @@ use Magento\Quote\Model\QuoteRepository;
 use Magento\Quote\Api\CartTotalRepositoryInterface;
 use Magento\Store\Model\StoreManagerInterface;
 use Magento\Catalog\Model\ProductRepository;
+use Magento\Framework\Registry;
 use Violet\VioletConnect\Model\Data\VioletCalculatedCart;
 use Violet\VioletConnect\Model\Data\VioletShippingMethod;
+use Violet\VioletConnect\Model\Violet;
 
 /**
  * Violet VioletOrderRepository
@@ -43,7 +45,11 @@ class VioletOrderRepository implements VioletOrderRepositoryInterface
      * @var ProductRepository
      */
     private $productRepository;
-   
+    /**
+     * @var Registry
+     */
+    private $registry;
+
 
     /**
      * @param QuoteManagement $quoteManagement
@@ -52,6 +58,7 @@ class VioletOrderRepository implements VioletOrderRepositoryInterface
      * @param CartTotalRepositoryInterface $cartTotalRepository
      * @param StoreManagerInterface $storeManager
      * @param ProductRepository $productRepository
+     * @param Registry $registry
      */
     public function __construct(
         \Magento\Quote\Model\QuoteManagement $quoteManagement,
@@ -60,6 +67,7 @@ class VioletOrderRepository implements VioletOrderRepositoryInterface
         \Magento\Quote\Api\CartTotalRepositoryInterface $cartTotalRepository,
         \Magento\Store\Model\StoreManagerInterface $storeManager,
         \Magento\Catalog\Model\ProductRepository $productRepository,
+        \Magento\Framework\Registry $registry,
     ) {
         $this->quoteManagement = $quoteManagement;
         $this->quoteRepository = $quoteRepository;
@@ -67,6 +75,7 @@ class VioletOrderRepository implements VioletOrderRepositoryInterface
         $this->cartTotalRepository = $cartTotalRepository;
         $this->storeManager = $storeManager;
         $this->productRepository = $productRepository;
+        $this->registry = $registry;
     }
 
 
@@ -125,14 +134,21 @@ class VioletOrderRepository implements VioletOrderRepositoryInterface
         $quote->setPaymentMethod('violet'); //payment method
         $quote->setInventoryProcessed(true); // reduce inventory
         $quote->save(); //Now Save quote and your quote is ready
- 
-        // Set Sales Order Payment
-        $quote->getPayment()->importData(['method' => 'violet']);
- 
-        // Collect Totals & Save Quote
-        $quote->collectTotals()->save();
 
-        return $this->quoteManagement->placeOrder($quoteId, null);
+        // Mark this request as a Violet-originated payment so the Violet payment method's
+        // isAvailable() check passes for importData and placeOrder.
+        $this->registry->register(Violet::VIOLET_API_CONTEXT_FLAG, true, true);
+        try {
+            // Set Sales Order Payment
+            $quote->getPayment()->importData(['method' => 'violet']);
+
+            // Collect Totals & Save Quote
+            $quote->collectTotals()->save();
+
+            return $this->quoteManagement->placeOrder($quoteId, null);
+        } finally {
+            $this->registry->unregister(Violet::VIOLET_API_CONTEXT_FLAG);
+        }
     }
 
      /**
