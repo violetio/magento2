@@ -26,15 +26,22 @@ class Violet extends \Magento\Payment\Model\Method\AbstractMethod
     protected $_isOffline = true;
 
     /**
-     * This payment method is not available for selection in any checkout or admin context.
-     * It is only used programmatically by Violet's own API endpoints, which set the payment
-     * method directly on the quote object, bypassing this availability check.
-     *
+     * Registry flag set by Violet's own API repositories around order placement.
+     * The method is only considered available while this flag is set, which keeps
+     * it hidden from storefront, admin, and third-party checkout listings while
+     * still allowing Violet-originated orders to import the payment.
+     */
+    const VIOLET_API_CONTEXT_FLAG = 'violet_payment_api_context';
+
+    /**
      * @param \Magento\Quote\Api\Data\CartInterface|null $quote
      * @return bool
      */
     public function isAvailable(\Magento\Quote\Api\Data\CartInterface $quote = null)
     {
-        return false;
+        if (!$this->_registry->registry(self::VIOLET_API_CONTEXT_FLAG)) {
+            return false;
+        }
+        return parent::isAvailable($quote);
     }
 }

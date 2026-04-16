@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.2
+
+### Fixed
+
+- Made the `isAvailable()` override on the `Violet` payment model context-aware. The unconditional `false` introduced in 1.4.1 caused Violet's own order placement flow to fail with "The requested Payment Method is not available." because `Quote\Payment::importData()` invokes `isAvailable()`. The method now returns `false` by default but returns `true` when a Violet API repository has flagged the request as Violet-originated, preserving the security guarantee while restoring API order placement.
+
 ## 1.4.1
 
 ### Security
