@@ -44,7 +44,7 @@ class VioletGuestBillingAddressRepository implements VioletGuestBillingAddressRe
         \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
         \Magento\Quote\Model\QuoteIdMaskFactory $quoteIdMaskFactory,
         \Magento\Quote\Api\BillingAddressManagementInterface $billingAddressManagement,
-        \Magento\Quote\Model\QuoteAddressValidator $addressValidator,
+        \Magento\Quote\Model\QuoteAddressValidator $addressValidator
     ) {
         $this->quoteRepository = $quoteRepository;
         $this->quoteIdMaskFactory = $quoteIdMaskFactory;
@@ -78,10 +78,11 @@ class VioletGuestBillingAddressRepository implements VioletGuestBillingAddressRe
         $items = $quote->getItems();
 
          // validate the address
-         $this->addressValidator->validateWithExistingAddress($quote, $address);
+         $this->addressValidator->validateForCart($quote, $address);
 
-        // apply billing address to quote
+        // apply billing address and customer email to quote
         $quote->setBillingAddress($address);
+        $quote->setCustomerEmail($address->getEmail());
 
         // if requested apply billing address as shipping address
         if ($useForShipping) {
