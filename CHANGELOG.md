@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.3
+
+- Fixed guest billing address assignment to use `validateForCart` and persist the customer email on the quote.
+
 ## 1.4.2
 
 - Made the `isAvailable()` override on the `Violet` payment model context-aware.
