@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.4
+
+- The `BeforeSalesOrderPlaced` observer now copies the order's shipping address to the billing address when billing is missing or has no country, preventing `AbstractMethod::validate()` from raising a 500 during payment validation on Violet-sourced orders.
+
 ## 1.4.3
 
 - Fixed guest billing address assignment to use `validateForCart` and persist the customer email on the quote.
