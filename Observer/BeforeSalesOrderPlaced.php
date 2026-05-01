@@ -2,6 +2,8 @@
 namespace Violet\VioletConnect\Observer;
 
 use Magento\Framework\Event\ObserverInterface;
+use Magento\Sales\Api\Data\OrderAddressInterface;
+use Magento\Sales\Api\Data\OrderAddressInterfaceFactory;
 use Magento\Sales\Model\Order;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
@@ -19,10 +21,17 @@ class BeforeSalesOrderPlaced implements ObserverInterface
      */
     private $quoteRepository;
 
+    /**
+     * @var OrderAddressInterfaceFactory
+     */
+    private $orderAddressFactory;
+
     public function __construct(
-      \Magento\Quote\Api\CartRepositoryInterface $quoteRepository
+      \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
+      \Magento\Sales\Api\Data\OrderAddressInterfaceFactory $orderAddressFactory
     ) {
             $this->quoteRepository = $quoteRepository;
+            $this->orderAddressFactory = $orderAddressFactory;
     }
 
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -34,9 +43,14 @@ class BeforeSalesOrderPlaced implements ObserverInterface
             // if this is a violet sourced order perform additional checks
             if ($this->isVioletSourcedOrder($order)) {
 
+                // Ensure the order has a billing address before payment validation runs.
+                // If billing is missing or has no country, fall back to the shipping address
+                // so AbstractMethod::validate() doesn't blow up on null->getCountryId().
+                $this->ensureBillingAddress($order);
+
                 // load the quote using the ID
                 $quote = $this->quoteRepository->get($order->getQuoteId());
-    
+
                 // if external shipping info was applied to the quote
                 if ($this->quoteHasExtShippingInfo($quote)) {
                     $shippingInfo = json_decode($quote->getExtShippingInfo());
@@ -78,6 +92,43 @@ class BeforeSalesOrderPlaced implements ObserverInterface
                 }
             }
         } catch (\Exception $e) {}
+    }
+
+    /**
+     * Ensure the order has a usable billing address. If it doesn't, copy
+     * from the order's shipping address. Mirrors Magento's "billing same
+     * as shipping" default and prevents AbstractMethod::validate() from
+     * calling getCountryId() on a null billing address.
+     *
+     * @param Order $order
+     * @return void
+     */
+    private function ensureBillingAddress(Order $order) {
+        if ($order->getIsVirtual()) {
+            return;
+        }
+
+        $shipping = $order->getShippingAddress();
+        if ($shipping === null || !$shipping->getCountryId()) {
+            return;
+        }
+
+        $billing = $order->getBillingAddress();
+        if ($billing !== null && $billing->getCountryId()) {
+            return;
+        }
+
+        $shippingData = $shipping->getData();
+        unset($shippingData['entity_id'], $shippingData['parent_id'], $shippingData['address_type']);
+
+        if ($billing === null) {
+            $newBilling = $this->orderAddressFactory->create();
+            $newBilling->addData($shippingData);
+            $order->setBillingAddress($newBilling);
+        } else {
+            $billing->addData($shippingData);
+            $billing->setAddressType(OrderAddressInterface::ADDRESS_TYPE_BILLING);
+        }
     }
 
     /**
