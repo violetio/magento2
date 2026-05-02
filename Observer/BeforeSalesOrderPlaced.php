@@ -7,6 +7,7 @@ use Magento\Sales\Api\Data\OrderAddressInterfaceFactory;
 use Magento\Sales\Model\Order;
 use Magento\Quote\Api\CartRepositoryInterface;
 use Magento\Quote\Model\QuoteRepository;
+use Psr\Log\LoggerInterface;
 
 /**
  * Violet Before Order Placed
@@ -26,12 +27,19 @@ class BeforeSalesOrderPlaced implements ObserverInterface
      */
     private $orderAddressFactory;
 
+    /**
+     * @var LoggerInterface
+     */
+    private $logger;
+
     public function __construct(
       \Magento\Quote\Api\CartRepositoryInterface $quoteRepository,
-      \Magento\Sales\Api\Data\OrderAddressInterfaceFactory $orderAddressFactory
+      \Magento\Sales\Api\Data\OrderAddressInterfaceFactory $orderAddressFactory,
+      LoggerInterface $logger
     ) {
             $this->quoteRepository = $quoteRepository;
             $this->orderAddressFactory = $orderAddressFactory;
+            $this->logger = $logger;
     }
 
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -95,10 +103,10 @@ class BeforeSalesOrderPlaced implements ObserverInterface
     }
 
     /**
-     * Ensure the order has a usable billing address. If it doesn't, copy
-     * from the order's shipping address. Mirrors Magento's "billing same
-     * as shipping" default and prevents AbstractMethod::validate() from
-     * calling getCountryId() on a null billing address.
+     * Ensure the order has a usable billing address. If the address row is
+     * missing, copy shipping data; if the row exists but has no country, copy
+     * only the shipping country. This prevents AbstractMethod::validate()
+     * from reading a null billing country.
      *
      * @param Order $order
      * @return void
@@ -118,16 +126,26 @@ class BeforeSalesOrderPlaced implements ObserverInterface
             return;
         }
 
-        $shippingData = $shipping->getData();
-        unset($shippingData['entity_id'], $shippingData['parent_id'], $shippingData['address_type']);
-
         if ($billing === null) {
+            $shippingData = $shipping->getData();
+            unset($shippingData['entity_id'], $shippingData['parent_id'], $shippingData['address_type']);
+
             $newBilling = $this->orderAddressFactory->create();
             $newBilling->addData($shippingData);
             $order->setBillingAddress($newBilling);
+
+            $this->logger->info(
+                'Violet sales_order_place_before: copied shipping address to order billing address (quoteId='
+                . $order->getQuoteId() . ')'
+            );
         } else {
-            $billing->addData($shippingData);
+            $billing->setCountryId($shipping->getCountryId());
             $billing->setAddressType(OrderAddressInterface::ADDRESS_TYPE_BILLING);
+
+            $this->logger->info(
+                'Violet sales_order_place_before: copied shipping country to order billing address (quoteId='
+                . $order->getQuoteId() . ')'
+            );
         }
     }
 
