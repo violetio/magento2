@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="controller_front_send_response_before">
+        <observer name="violet_wellknown_cache_headers" instance="Violet\VioletConnect\Observer\WellKnownCacheHeaders" />
+    </event>
+</config>

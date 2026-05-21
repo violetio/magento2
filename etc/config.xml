@@ -15,5 +15,11 @@
                 <group>offline</group>
             </violet>
         </payment>
+        <violet>
+            <ucp>
+                <ultraviolet_url>http://localhost:12071</ultraviolet_url>
+                <ultraviolet_webhook_url>http://host.docker.internal:12071</ultraviolet_webhook_url>
+            </ucp>
+        </violet>
     </default>
 </config>

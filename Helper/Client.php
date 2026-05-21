@@ -220,6 +220,51 @@ class Client extends AbstractHelper
 
 
     /**
+     * Notify UltraViolet that an order was placed for a UltraViolet-initiated cart.
+     * Called by SalesOrderPlaced observer when the checkout session contains a ucp_session_id.
+     * @param string $ucpSessionId
+     */
+    public function notifyOrderPlaced($ucpSessionId)
+    {
+        $ultravioletUrl = $this->scopeConfig->getValue(
+            'violet/ucp/ultraviolet_webhook_url',
+            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
+        );
+
+        if (empty($ultravioletUrl)) {
+            $this->logger->warning('UltraViolet: ultraviolet_url not configured, skipping order notification');
+            return null;
+        }
+
+        $url = rtrim($ultravioletUrl, '/') . '/v1/webhooks/order-placed';
+        $requestBody = json_encode([
+            'ucp_session_id' => $ucpSessionId,
+        ]);
+
+        $headers = ['Content-Type: application/json'];
+
+        $this->logger->info('UltraViolet: notifying order placed at ' . $url);
+
+        try {
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $requestBody);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+            $result = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            $this->logger->info('UltraViolet: order-placed webhook response: ' . $httpCode);
+            return $result;
+        } catch (\Exception $e) {
+            $this->logger->error('UltraViolet: order-placed webhook failed: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
      * Sign Request
      * @param object $requestBody
      */

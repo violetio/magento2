@@ -65,6 +65,20 @@ class VioletGuestCartItemRepository implements VioletGuestCartItemRepositoryInte
      */
     public function save($cartItem)
     {
+         $logger = \Magento\Framework\App\ObjectManager::getInstance()->get(\Psr\Log\LoggerInterface::class);
+         $logger->info('Violet addItem: sku=' . $cartItem->getSku()
+             . ' qty=' . $cartItem->getQty()
+             . ' price=' . $cartItem->getPrice()
+             . ' quoteId=' . $cartItem->getQuoteId()
+             . ' itemId=' . $cartItem->getItemId()
+             . ' name=' . $cartItem->getName()
+             . ' productType=' . $cartItem->getProductType()
+             . ' class=' . get_class($cartItem));
+         // Dump raw data to understand what Magento deserialized
+         if (method_exists($cartItem, 'getData')) {
+             $logger->info('Violet addItem raw data: ' . json_encode($cartItem->getData()));
+         }
+
          $cartId = $cartItem->getQuoteId();
          if (!$cartId) {
              throw new InputException(
@@ -101,7 +115,13 @@ class VioletGuestCartItemRepository implements VioletGuestCartItemRepositoryInte
          if (!$skuExists) {
 
             // load the product using the Sku
-            $product=$this->productRepository->get($cartItem->getSku());
+            try {
+                $product=$this->productRepository->get($cartItem->getSku());
+            } catch (\Exception $e) {
+                $logger->error('Violet addItem: failed to load product by sku='
+                    . $cartItem->getSku() . ' error=' . $e->getMessage());
+                throw $e;
+            }
 
             // if a price is provided use this to override the default price
             if ($cartItem->getPrice() !== null) {
@@ -112,10 +132,16 @@ class VioletGuestCartItemRepository implements VioletGuestCartItemRepositoryInte
             }
 
             // add the product to the quote
-            $quote->addProduct(
-                $product,
-                intval($cartItem->getQty())
-            );
+            try {
+                $quote->addProduct(
+                    $product,
+                    intval($cartItem->getQty())
+                );
+            } catch (\Exception $e) {
+                $logger->error('Violet addItem: addProduct failed for sku='
+                    . $cartItem->getSku() . ' error=' . $e->getMessage());
+                throw $e;
+            }
         }
 
         // save before collecting totals to prevent custom pricing from be overridden

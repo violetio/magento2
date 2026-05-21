@@ -7,4 +7,5 @@
   <preference for="Violet\VioletConnect\Api\VioletGuestShippingInformationRepositoryInterface" type="Violet\VioletConnect\Model\ResourceModel\VioletGuestShippingInformationRepository" />
   <preference for="Violet\VioletConnect\Api\VioletGuestCartRepositoryInterface" type="Violet\VioletConnect\Model\ResourceModel\VioletGuestCartRepository" />
   <preference for="Violet\VioletConnect\Api\VioletOrderRepositoryInterface" type="Violet\VioletConnect\Model\ResourceModel\VioletOrderRepository" />
+
 </config>

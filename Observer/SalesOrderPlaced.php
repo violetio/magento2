@@ -1,8 +1,10 @@
 <?php
 namespace Violet\VioletConnect\Observer;
 
+use Magento\Checkout\Model\Session as CheckoutSession;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Sales\Model\Order;
+use Psr\Log\LoggerInterface;
 
 /**
  * Violet After Order Placed
@@ -14,13 +16,19 @@ class SalesOrderPlaced implements ObserverInterface
 {
     private $objectManager;
     private $vClient;
+    private CheckoutSession $checkoutSession;
+    private LoggerInterface $logger;
 
     public function __construct(
-      \Magento\Framework\ObjectManagerInterface $objectManager,
-      \Violet\VioletConnect\Helper\Client $vClient
+        \Magento\Framework\ObjectManagerInterface $objectManager,
+        \Violet\VioletConnect\Helper\Client $vClient,
+        CheckoutSession $checkoutSession,
+        LoggerInterface $logger
     ) {
-            $this->objectManager = $objectManager;
-            $this->vClient = $vClient;
+        $this->objectManager = $objectManager;
+        $this->vClient = $vClient;
+        $this->checkoutSession = $checkoutSession;
+        $this->logger = $logger;
     }
 
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -50,9 +58,18 @@ class SalesOrderPlaced implements ObserverInterface
                         $this->vClient->productUpdated($item->getSku());
                     }
                 }
-          }
+            }
+
+            // Notify UltraViolet when an order is placed for a UltraViolet-initiated cart
+            $ucpSessionId = $this->checkoutSession->getData('ucp_session_id');
+            if (!empty($ucpSessionId)) {
+                $this->logger->info('UltraViolet: notifying order placed for ucp_session_id=' . $ucpSessionId);
+                $this->vClient->notifyOrderPlaced($ucpSessionId);
+                $this->checkoutSession->unsetData('ucp_session_id');
+            }
 
         } catch (\Exception $e) {
+            $this->logger->error('SalesOrderPlaced observer error: ' . $e->getMessage());
         }
     }
 }

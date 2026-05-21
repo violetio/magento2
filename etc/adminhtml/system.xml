@@ -62,6 +62,14 @@
                     <comment>Override the default API path. (Advanced)</comment>
                 </field>
             </group>
+            <group id="ucp" translate="label" type="text" sortOrder="12" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>UCP Settings</label>
+
+                <field id="ultraviolet_url" translate="label" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>UltraViolet Server URL</label>
+                    <comment>Base URL of the UltraViolet UCP server (e.g. http://localhost:12071). Used in the .well-known/ucp profile to direct AI agents to UltraViolet endpoints.</comment>
+                </field>
+            </group>
         </section>
     </system>
 </config>
