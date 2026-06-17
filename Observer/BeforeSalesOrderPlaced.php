@@ -98,6 +98,9 @@ class BeforeSalesOrderPlaced implements ObserverInterface
                         $order->setShippingDescription($shippingInfo->shipping_description);
                     }
                 }
+
+                // preserve custom discount information from quote to order
+                $this->preserveCustomDiscountData($quote, $order);
             }
         } catch (\Exception $e) {}
     }
@@ -193,5 +196,32 @@ class BeforeSalesOrderPlaced implements ObserverInterface
      */
     private function sumGrandTotal($orderTotals) {
         return $orderTotals->getShippingAmount() + $orderTotals->getSubtotal() + $orderTotals->getTaxAmount() + $orderTotals->getDiscountAmount();
+    }
+
+    /**
+     * Preserve custom discount data from quote to order
+     * 
+     * @param \Magento\Quote\Model\Quote $quote
+     * @param \Magento\Sales\Model\Order $order
+     * @return void
+     */
+    private function preserveCustomDiscountData($quote, $order) {
+        // Check if quote has custom discount data
+        $customDiscountCode = $quote->getData('violet_custom_discount_code');
+        $customDiscountAmount = $quote->getData('violet_custom_discount_amount');
+        
+        if ($customDiscountCode && $customDiscountAmount) {
+            // Store custom discount information on the order for reference
+            $order->setData('violet_custom_discount_code', $customDiscountCode);
+            $order->setData('violet_custom_discount_amount', $customDiscountAmount);
+            
+            // Ensure discount description is preserved on order
+            $discountDescription = ($customDiscountCode && $customDiscountCode !== 'Custom Discount') ? 
+                'Custom Discount: ' . $customDiscountCode : 
+                'Custom Discount';
+            if (!$order->getDiscountDescription()) {
+                $order->setDiscountDescription($discountDescription);
+            }
+        }
     }
 }
