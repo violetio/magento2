@@ -11,8 +11,7 @@ use Violet\VioletConnect\Model\VioletEntityFactory;
  * Builds the UCP well-known profile JSON for this merchant.
  *
  * The profile tells AI shopping agents where to find UltraViolet's
- * REST and MCP endpoints for this merchant, and what capabilities
- * are supported.
+ * REST endpoint for this merchant, and what capabilities are supported.
  */
 class UcpProfileBuilder
 {
@@ -70,7 +69,7 @@ class UcpProfileBuilder
         return [
             'ucp' => [
                 'version' => self::UCP_VERSION,
-                'services' => $this->buildServices($ultravioletUrl, $restBase),
+                'services' => $this->buildServices($restBase),
                 'capabilities' => $this->buildCapabilities($restBase),
                 'payment_handlers' => new \stdClass(),
             ],
@@ -81,7 +80,7 @@ class UcpProfileBuilder
     /**
      * @return array Service entries keyed by service name.
      */
-    private function buildServices(string $ultravioletUrl, string $restBase): array
+    private function buildServices(string $restBase): array
     {
         return [
             'dev.ucp.shopping' => [
@@ -91,16 +90,6 @@ class UcpProfileBuilder
                     'schema' => self::UCP_SPEC_BASE . '/services/shopping/rest.openapi.json',
                     'transport' => 'rest',
                     'endpoint' => $restBase,
-                ],
-                [
-                    'version' => self::UCP_VERSION,
-                    'spec' => self::UCP_SPEC_BASE . '/specification/overview',
-                    'schema' => self::UCP_SPEC_BASE . '/services/shopping/mcp.openrpc.json',
-                    'transport' => 'mcp',
-                    'endpoint' => $ultravioletUrl . '/mcp/sse',
-                    'config' => [
-                        'transport_type' => 'sse',
-                    ],
                 ],
             ],
         ];
@@ -121,18 +110,6 @@ class UcpProfileBuilder
                 'version' => self::UCP_VERSION,
                 'spec' => self::UCP_SPEC_BASE . '/specification/catalog',
                 'schema' => self::UCP_SPEC_BASE . '/schemas/shopping/catalog.json',
-            ]],
-            'dev.ucp.shopping.checkout.events' => [[
-                'version' => self::UCP_VERSION,
-                'spec' => self::UCP_SPEC_BASE . '/specification/checkout/events',
-                'schema' => self::UCP_SPEC_BASE . '/schemas/shopping/checkout-events.json',
-                'config' => [
-                    'endpoint_pattern' => $restBase . '/checkout-sessions/{id}/stream',
-                    'transport' => 'sse',
-                    'description' => 'SSE stream for checkout session events. Connect after '
-                        . 'presenting continue_url to receive push notification when payment '
-                        . 'completes. Emits: connected, completed, timeout, error events.',
-                ],
             ]],
         ];
     }
