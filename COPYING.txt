@@ -1,0 +1,10 @@
+Copyright © 2017-2024 Violet.io, Inc.
+
+This Magento 2 module is dual-licensed under the Open Software License
+version 3.0 (OSL-3.0, see LICENSE.txt) and the Academic Free License
+version 3.0 (AFL-3.0, see LICENSE_AFL.txt). You may use it under either.
+
+Portions of app/code/Violet/VioletConnect/Model/Violet.php and
+app/code/Violet/VioletConnect/etc/adminhtml/system.xml are based on
+Magento sample code, Copyright © 2015 Magento, which is made available
+under the same licences.
